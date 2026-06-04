@@ -17,3 +17,5 @@ probe.cjs
 probe-*.cjs
 probe-*.ps1
 scripts/
+
+.vercel

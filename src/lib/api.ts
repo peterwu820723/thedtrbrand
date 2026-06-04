@@ -24,13 +24,33 @@ import type {
 
 // Multi-tenant stores are identified by the X-Xavvi-Store-Id header, not
 // a bearer token. If that env is set, we attempt LIVE; otherwise MOCK.
-const USE_MOCK = !import.meta.env.VITE_XAVVI_API_STORE_ID;
+//
+// Build-time env var resolution (set these in Vercel Dashboard for prod):
+//   VITE_XAVVI_API_BASE       — e.g. https://shop-dev.xavvi.com/api
+//   VITE_XAVVI_API_STORE_ID   — e.g. 11111
+//
+// For the live Vercel demo we default to the test (shop-dev) environment
+// so the storefront actually shows products. Switch to shop.xavvi.com
+// once the production store 11111 is populated.
+const RAW_BASE = (import.meta.env.VITE_XAVVI_API_BASE as string | undefined) ?? "";
+const RAW_STORE = (import.meta.env.VITE_XAVVI_API_STORE_ID as string | undefined) ?? "";
+// Hardcoded fallback to shop-dev so the Vercel demo works without manual env setup
+const FALLBACK_BASE = "https://shop-dev.xavvi.com/api";
+const FALLBACK_STORE_ID = "11111";
+const API_BASE_RESOLVED = RAW_BASE || FALLBACK_BASE;
+const API_STORE_ID_RESOLVED = RAW_STORE || FALLBACK_STORE_ID;
+const USE_MOCK = !API_STORE_ID_RESOLVED;
 const impl = USE_MOCK ? mock : live;
+
+// Re-export resolved values so api.live.ts can pick them up
+import { env as _env } from "./api.env";
+_env.base = API_BASE_RESOLVED;
+_env.storeId = API_STORE_ID_RESOLVED;
 
 if (typeof window !== "undefined") {
   // eslint-disable-next-line no-console
   console.info(
-    `[Xavvi API] Mode: ${USE_MOCK ? "MOCK" : "LIVE"} (base=${import.meta.env.VITE_XAVVI_API_BASE ?? "default"}, store=${import.meta.env.VITE_XAVVI_API_STORE_ID ? "set" : "unset"})`,
+    `[Xavvi API] Mode: ${USE_MOCK ? "MOCK" : "LIVE"} (base=${API_BASE_RESOLVED}, store=${API_STORE_ID_RESOLVED ? "set" : "unset"})`,
   );
 }
 

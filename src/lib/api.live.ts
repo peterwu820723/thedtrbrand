@@ -48,11 +48,15 @@ import type {
 // ================================================================
 // Configuration
 // ================================================================
+//
+// api.ts resolves env vars (with hardcoded fallbacks) and writes them
+// into api.env.ts. We import the resolved values here so the LIVE
+// implementation always has a working base URL + store ID, even when
+// Vite build envs are not set.
 
-const BASE_URL = (
-  import.meta.env.VITE_XAVVI_API_BASE ?? "https://shop.xavvi.com/api"
-).replace(/\/+$/, "");
-const STORE_ID = import.meta.env.VITE_XAVVI_API_STORE_ID ?? "";
+import { env as _resolvedEnv } from "./api.env";
+const BASE_URL = (_resolvedEnv.base || "https://shop.xavvi.com/api").replace(/\/+$/, "");
+const STORE_ID = _resolvedEnv.storeId || "";
 
 // ================================================================
 // Auth token storage
