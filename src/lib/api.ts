@@ -26,26 +26,22 @@ import type {
 // a bearer token. If that env is set, we attempt LIVE; otherwise MOCK.
 //
 // Build-time env var resolution (set these in Vercel Dashboard for prod):
-//   VITE_XAVVI_API_BASE       — e.g. https://shop-dev.xavvi.com/api
+//   VITE_XAVVI_API_BASE       — e.g. https://shop.xavvi.com/api
 //   VITE_XAVVI_API_STORE_ID   — e.g. 11111
 //
-// For the live Vercel demo we default to the test (shop-dev) environment
-// so the storefront actually shows products. Switch to shop.xavvi.com
-// once the production store 11111 is populated.
-const RAW_BASE = (import.meta.env.VITE_XAVVI_API_BASE as string | undefined) ?? "";
-const RAW_STORE = (import.meta.env.VITE_XAVVI_API_STORE_ID as string | undefined) ?? "";
-// Hardcoded fallback to shop-dev so the Vercel demo works without manual env setup
-const FALLBACK_BASE = "https://shop-dev.xavvi.com/api";
-const FALLBACK_STORE_ID = "11111";
-const API_BASE_RESOLVED = RAW_BASE || FALLBACK_BASE;
-const API_STORE_ID_RESOLVED = RAW_STORE || FALLBACK_STORE_ID;
+// api.env.ts holds the hardcoded defaults so the LIVE implementation
+// always has a working base URL + store ID, even when Vite build envs
+// are not set. Overrides here win over the defaults.
+import { env as _env } from "./api.env";
+
+const RAW_BASE = ((import.meta.env.VITE_XAVVI_API_BASE as string | undefined) ?? "").trim();
+const RAW_STORE = ((import.meta.env.VITE_XAVVI_API_STORE_ID as string | undefined) ?? "").trim();
+_env.base = RAW_BASE || _env.base;
+_env.storeId = RAW_STORE || _env.storeId;
+const API_BASE_RESOLVED = _env.base;
+const API_STORE_ID_RESOLVED = _env.storeId;
 const USE_MOCK = !API_STORE_ID_RESOLVED;
 const impl = USE_MOCK ? mock : live;
-
-// Re-export resolved values so api.live.ts can pick them up
-import { env as _env } from "./api.env";
-_env.base = API_BASE_RESOLVED;
-_env.storeId = API_STORE_ID_RESOLVED;
 
 if (typeof window !== "undefined") {
   // eslint-disable-next-line no-console
